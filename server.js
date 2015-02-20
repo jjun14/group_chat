@@ -31,15 +31,17 @@ io.sockets.on('connection', function(socket){
   // LISTEN for a new user entering the chat room
   socket.on('got_new_user', function(data){
     console.log('got a new user named: ' + data.name);
-    users.push({id: socket.id, name: data.name});
+    console.log('in room: ' + data.room_name);
+    socket.join(data.room_name);
+    users.push({id: socket.id, name: data.name, room_name: data.room_name});
     // BROADCAST notification that new user has entered chat
-    socket.broadcast.emit('new_user', {name: data.name});
-    socket.emit('entered_room', {name: data.name, messages: messages});
+    socket.broadcast.to(data.room_name).emit('new_user', {name: data.name});
+    socket.emit('entered_room', {name: data.name, room_name: data.room_name, messages: messages});
   });
   // LISTEN for the client entering a new message
   socket.on("got_new_message", function(data){
-    messages.push({name: data.name, text: data.text});
-    socket.broadcast.emit('broadcast_message', {name: data.name, text: data.text});
+    messages.push({name: data.name, text: data.text, room_name: data.room_name});
+    socket.broadcast.to(data.room_name).emit('broadcast_message', {name: data.name, text: data.text});
     socket.emit('emit_message', {text: data.text});
   });
   // LISTEN for the client disconnect and broadcast name
@@ -51,9 +53,9 @@ io.sockets.on('connection', function(socket){
       if(socket.id == users[i].id)
       {
         name = users[i].name;
+        io.to(users[i].room_name).emit('disconnected_user', {name: name});
         users[i] = users[users.length - 1];
         users.pop();
-        io.emit('disconnected_user', {name: name});
         return;
       }
     }

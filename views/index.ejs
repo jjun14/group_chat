@@ -12,9 +12,10 @@
     $(document).ready(function(){
       var socket = io.connect();
       var user_name = prompt('Enter your name:');
+      var room_name = prompt('Enter a room name:');
       if(user_name)
       {
-        socket.emit('got_new_user', {name: user_name});
+        socket.emit('got_new_user', {name: user_name, room_name: room_name});
       }
       else
       {
@@ -22,15 +23,24 @@
         {
           user_name = prompt('Enter your name:');
         }
+        while(!room_name)
+        {
+          room_name = prompt('Enter a room name:');
+        }
       }
       // LISTEN for 'new_user', display all previous messages, and notify all clients who has entered the chat room
       socket.on('entered_room', function(data){
         console.log('entered_room');
+        console.log(data.messages);
         for(var i = 0; i < data.messages.length; i++)
         {
-          $('.messages').append("<p class='message'><span>"+data.messages[i].name+"</span>: "+data.messages[i].text+"</p>");
+          if(data.messages[i].room_name == room_name){
+            console.log(data.messages[i].room_name);
+            console.log(data.room_name);
+            $('.messages').append("<p class='message'><span>"+data.messages[i].name+"</span>: "+data.messages[i].text+"</p>");
+          }
         }
-        $('.messages').append("<p class='update'>You entered the chat room</p>");
+        $('.messages').append("<p class='update'>You entered chat room "+data.room_name+"</p>");
       });
       socket.on('new_user', function(data){
         console.log('new_user');
@@ -38,7 +48,7 @@
       });
       // EMIT 'got_new_message' when a new message is sent
       $('#messageForm').submit(function(){
-        var message_info = {name: user_name};
+        var message_info = {name: user_name, room_name: room_name};
         var message_array = $(this).serializeArray();
         for(var i = 0; i < message_array.length; i++)
         {
