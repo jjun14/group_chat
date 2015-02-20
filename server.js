@@ -2,6 +2,7 @@ var express = require('express');
 var app = express();
 var bodyParser = require('body-parser')
 var session = require('express-session');
+var rooms = [];
 var messages = [];
 var users = [];
 
@@ -10,13 +11,9 @@ app.use(express.static(__dirname + "/static"));
 app.set('views', __dirname + '/views');
 // Now lets set the view engine itself so that express knows that we are using ejs as opposed to another templating engine like jade
 app.set('view engine', 'ejs');
-// Use bodyParser to handle post-data
-app.use(bodyParser.urlencoded({extended: true}));
-//Create session object using express-session
-// app.use(session({}));
 
 app.get('/', function (req, res){
-  res.render('index');
+  res.render('index', {rooms: rooms});
 });
 
 var server = app.listen(8000, function(){
@@ -28,11 +25,16 @@ var io = require('socket.io').listen(server);
 io.sockets.on('connection', function(socket){
   console.log("WE ARE USING SOCKETS!");
   //all the socket code goes in here!
-  // LISTEN for a new user entering the chat room
-  socket.on('got_new_user', function(data){
-    console.log('got a new user named: ' + data.name);
-    console.log('in room: ' + data.room_name);
+  // LISTEN for a new chat room being made
+  socket.on('create', function(data){
     socket.join(data.room_name);
+    rooms.push({id: socket.id, room_name: data.room_name});
+    socket.emit('create_room', {name: data.name, room_name: data.room_name});
+  });
+    // LISTEN for a new user entering the chat room
+  socket.on('choose_room', function(data){
+    socket.join(data.room_name);
+    console.log('Entering Room name' + data.room_name);
     users.push({id: socket.id, name: data.name, room_name: data.room_name});
     // BROADCAST notification that new user has entered chat
     socket.broadcast.to(data.room_name).emit('new_user', {name: data.name});

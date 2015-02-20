@@ -16,3 +16,13 @@
 8) Have the client LISTEN for new_message and use jquery to display the user name and message (done)
 
 9) Have the server LISTEN for 'disconnect', on trigger, BROADCAST 'disconnect_user' to all clients and add a new notification that the user has left the chat room (done)
+
+
+// More features
+
+1) Prompt for name
+2) show create chat room/join chat room buttons
+3) if create a chat room is clicked
+  1) show modal for create chat room
+  2) on create, fade out modal and button options
+  3) show the chat room

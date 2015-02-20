@@ -2,50 +2,70 @@
   <head>
     <meta charset="utf-8">
     <title>Group Chat</title>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap-theme.min.css">
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>
     <link rel="stylesheet" type="text/css" href="/index.css">
     <script type ="text/javascript" src="/socket.io/socket.io.js"></script>
     <script type='text/javascript'>
     $(document).ready(function(){
       var socket = io.connect();
       var user_name = prompt('Enter your name:');
-      var room_name = prompt('Enter a room name:');
-      if(user_name)
+      var room_name;
+      // if(user_name)
+      // {
+      //   socket.emit('got_new_user', {name: user_name});
+      // }
+      // else
+      // {
+      while(!user_name)
       {
-        socket.emit('got_new_user', {name: user_name, room_name: room_name});
+        user_name = prompt('Enter your name:');
       }
-      else
-      {
-        while(!user_name)
-        {
-          user_name = prompt('Enter your name:');
-        }
-        while(!room_name)
-        {
-          room_name = prompt('Enter a room name:');
-        }
-      }
+        // while(!room_name)
+        // {
+        //   room_name = prompt('Enter a room name:');
+        // }
+      // }
+      $('#createForm').submit(function(){
+        $('.options').fadeOut(function(){
+          $('.room').fadeIn();
+          var form_info = $('#createForm').serializeArray();
+          room_name = form_info[0]['value'];
+          socket.emit('create', {name: user_name, room_name: room_name});
+        });
+        return false;
+      });
       // LISTEN for 'new_user', display all previous messages, and notify all clients who has entered the chat room
+      $('.room-button').click(function(){
+        room_name = $(this).text();
+        socket.emit('choose_room', {name: user_name, room_name: room_name});
+        $('.options').fadeOut(function(){
+          $('.room').fadeIn(function(){
+            $('.messages').animate({scrollTop: $('.messages').height()}, 1600, 'easeOutSine');
+          });
+        });
+      });
       socket.on('entered_room', function(data){
-        console.log('entered_room');
-        console.log(data.messages);
+        $('h4').text(data.room_name);
         for(var i = 0; i < data.messages.length; i++)
         {
           if(data.messages[i].room_name == room_name){
-            console.log(data.messages[i].room_name);
-            console.log(data.room_name);
             $('.messages').append("<p class='message'><span>"+data.messages[i].name+"</span>: "+data.messages[i].text+"</p>");
           }
         }
         $('.messages').append("<p class='update'>You entered chat room "+data.room_name+"</p>");
       });
       socket.on('new_user', function(data){
-        console.log('new_user');
         $('.messages').append("<p class='update'>"+data.name+" has entered the chat room</p>");
       });
+      // LISTEN for 'create_room'
+      socket.on('create_room', function(data){
+        $('h4').text(data.room_name);
+        $('.messages').append("<p class='update'>"+data.name+" created the chat room: "+data.room_name+"</p>");
+      })
       // EMIT 'got_new_message' when a new message is sent
       $('#messageForm').submit(function(){
         var message_info = {name: user_name, room_name: room_name};
@@ -59,6 +79,7 @@
       }); 
       // LISTEN for 'new_message' and user jQuery to display user and message
       socket.on('broadcast_message', function(data){
+        alert('broadcast_message');
         $('.messages').append("<p class='message'><span>"+data.name+"</span>: "+data.text+"</p>");
       });
       socket.on('emit_message', function(data){
@@ -66,7 +87,6 @@
       });
       // LISTEN for 'disconnected_user' and notify all clients who disconnected
       socket.on('disconnected_user', function(data){
-        console.log('hi');
         $('.messages').append("<p class='update'>"+data.name+" has left the chat room</p>");
       });
 
@@ -74,10 +94,54 @@
     </script>
   </head>
   <body>
-    <div class="container">
+    <div class="options container">
+      <div class="row">
+        <div class="col-md-4 col-md-offset-4">
+          <button class='option btn btn-primary' data-toggle="modal" data-target="#createModal">Create Room</button>
+          <button class='option btn btn-primary' data-toggle="modal" data-target="#joinModal">Join a Room</button>
+        </div>
+      </div>
+    </div>
+    <!-- Create Room Modal -->
+    <div class="modal fade" id="createModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title" id="myModalLabel">Create Room</h4>
+          </div>
+          <div class="modal-body">
+            <form id="createForm">
+              <div class="form-group">
+                <input type="text" class="form-control" id="Room Name" name="room_name" placeholder="Enter Room Name">
+              </div>
+              <input id="create-button" type='submit' class="btn btn-primary" data-toggle="modal" data-target="#createModal" value='Submit'>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Join Room Modal -->
+    <div class="modal fade" id="joinModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title" id="myModalLabel">Join Room</h4>
+          </div>
+          <div class="modal-body">
+            <% for(var i = 0; i < rooms.length; i++){ %>
+              <button class='room-button btn btn-primary' data-toggle="modal" data-target="#joinModal"><%= rooms[i].room_name %></button>
+            <% } %>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Chat Room -->
+    <div class="room container">
       <div class="row">
         <div class="col-md-4">
-          <h4>Conversation Board</h4>
+          <h4></h4>
         </div>
       </div>
       <div class="row">

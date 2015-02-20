@@ -1,3 +1,19 @@
+.options
+{
+  text-align: center;
+  padding-top: 200px;
+}
+
+.modal-content 
+{
+  margin-top: 150px;
+}
+
+.room
+{
+  display: none;
+}
+
 h4
 {
   text-decoration: underline;
