@@ -1,0 +1,34 @@
+h4
+{
+  text-decoration: underline;
+  margin: 20px 0px 20px 0px;
+}
+
+.messages
+{
+  border: 2px solid silver;
+  height: 350px;
+  padding-top: 10px;
+  overflow: scroll;
+}
+
+form
+{
+  margin: 15px 0px;
+}
+
+.button
+{
+  margin-bottom: 15px
+}
+
+.update
+{
+  color: blue;
+  font-size: 10px;
+}
+
+.message span 
+{
+  color: green;
+}

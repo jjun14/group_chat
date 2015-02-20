@@ -1,0 +1,87 @@
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Group Chat</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap-theme.min.css">
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="/index.css">
+    <script type ="text/javascript" src="/socket.io/socket.io.js"></script>
+    <script type='text/javascript'>
+    $(document).ready(function(){
+      var socket = io.connect();
+      var user_name = prompt('Enter your name:');
+      if(user_name)
+      {
+        socket.emit('got_new_user', {name: user_name});
+      }
+      else
+      {
+        while(!user_name)
+        {
+          user_name = prompt('Enter your name:');
+        }
+      }
+      // LISTEN for 'new_user', display all previous messages, and notify all clients who has entered the chat room
+      socket.on('entered_room', function(data){
+        console.log('entered_room');
+        for(var i = 0; i < data.messages.length; i++)
+        {
+          $('.messages').append("<p class='message'><span>"+data.messages[i].name+"</span>: "+data.messages[i].text+"</p>");
+        }
+        $('.messages').append("<p class='update'>You entered the chat room</p>");
+      });
+      socket.on('new_user', function(data){
+        console.log('new_user');
+        $('.messages').append("<p class='update'>"+data.name+" has entered the chat room</p>");
+      });
+      // EMIT 'got_new_message' when a new message is sent
+      $('#messageForm').submit(function(){
+        var message_info = {name: user_name};
+        var message_array = $(this).serializeArray();
+        for(var i = 0; i < message_array.length; i++)
+        {
+          message_info[message_array[i].name] = message_array[i].value;
+        }
+        socket.emit('got_new_message', message_info);
+        return false;
+      }); 
+      // LISTEN for 'new_message' and user jQuery to display user and message
+      socket.on('broadcast_message', function(data){
+        $('.messages').append("<p class='message'><span>"+data.name+"</span>: "+data.text+"</p>");
+      });
+      socket.on('emit_message', function(data){
+        $('.messages').append("<p class='message'><span>You</span>: "+data.text+"</p>");
+      });
+      // LISTEN for 'disconnected_user' and notify all clients who disconnected
+      socket.on('disconnected_user', function(data){
+        console.log('hi');
+        $('.messages').append("<p class='update'>"+data.name+" has left the chat room</p>");
+      });
+
+    });
+    </script>
+  </head>
+  <body>
+    <div class="container">
+      <div class="row">
+        <div class="col-md-4">
+          <h4>Conversation Board</h4>
+        </div>
+      </div>
+      <div class="row">
+        <div class="messages col-md-10 col-md-offset-1">
+        </div>
+      </div>
+      <div class="row">
+        <form id="messageForm" action="" method="post">
+          <div class="form-group">
+            <input type="text" name= "text" class="form-control" id="text" placeholder="Enter your message here">
+          </div>
+          <input class="button btn btn-primary pull-right" type="submit" value="Send">
+        </form>
+      </div>
+    </div>
+  </body>
+</html>

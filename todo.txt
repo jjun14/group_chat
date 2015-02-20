@@ -1,0 +1,18 @@
+1) Render views index
+2) On client side have js prompt user for name, store value in name (done)
+
+3) Have client EMIT 'got_new_user' and pass the name to the server (done)
+
+4) Have the server LISTEN for 'got_new_user' and BROADCAST 'new_user' to the client, pass the name of the new user (done)
+
+5) Have the client LISTEN for 'new_user' and  
+   1)on the event use jquery to add a new notification that the new user has entered the chat room (done)
+   2) display all previous message in the client (done)
+
+6) Have the client EMIT 'got_new_message' and pass the name/id(?) of the user and message text to the server (done)
+
+7) Have the server LISTEN for 'got_new_message', store the message and user name, FULL_BROADCAST new_message to all clients, pass the user name and message to the client (done)
+
+8) Have the client LISTEN for new_message and use jquery to display the user name and message (done)
+
+9) Have the server LISTEN for 'disconnect', on trigger, BROADCAST 'disconnect_user' to all clients and add a new notification that the user has left the chat room (done)
